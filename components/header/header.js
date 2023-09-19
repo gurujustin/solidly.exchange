@@ -219,11 +219,30 @@ function Header(props) {
   const switchChain = async () => {
     let hexChain = '0x'+Number(process.env.NEXT_PUBLIC_CHAINID).toString(16)
     try {
-      await window.ethereum.request({
+      await ethereum.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: hexChain }],
       });
     } catch (switchError) {
+      // This error code indicates that the chain has not been added to MetaMask.
+      if (switchError.code === 4902) {
+        try {
+          await ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: hexChain,
+                chainName: 'Fantom Mainnet',
+                rpcUrls: ['https://rpc.ftm.tools'] /* ... */,
+              },
+            ],
+          });
+        } catch (addError) {
+          // handle "add" error
+          console.log("add error",addError)
+        }
+      }
+      // handle other "switch" errors
       console.log("switch error",switchError)
     }
   }
